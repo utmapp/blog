@@ -1,0 +1,52 @@
+---
+layout: default
+title: UTM Blog
+description: Development notes, design choices, and release deep-dives from the UTM team.
+---
+<div class="home">
+  <section class="home-intro">
+    <p class="home-eyebrow">UTM&nbsp;·&nbsp;Dev Blog</p>
+    <h1 class="home-tagline">
+      Notes from the team building <em>UTM</em>&thinsp;—
+      virtualization and emulation for Mac, iPhone, and iPad.
+    </h1>
+    <p class="home-blurb">
+      Release internals, design choices, the occasional postmortem,
+      and small things we want to make a bigger deal of.
+      Updated whenever there's something worth sharing.
+    </p>
+  </section>
+
+  <h2 class="posts-heading">Latest posts</h2>
+
+  {%- if site.posts.size > 0 -%}
+  <ol class="post-list" reversed>
+    {%- for post in site.posts -%}
+    <li class="post-list-item">
+      <a class="post-list-link" href="{{ post.url | relative_url }}">
+        <time class="post-list-date" datetime="{{ post.date | date_to_xmlschema }}">
+          {{ post.date | date: "%b %-d, %Y" }}
+        </time>
+        <div class="post-list-content">
+          <h3 class="post-list-title">{{ post.title }}</h3>
+          {%- if post.subtitle -%}
+          <p class="post-list-excerpt">{{ post.subtitle }}</p>
+          {%- elsif post.excerpt -%}
+          <p class="post-list-excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 180 }}</p>
+          {%- endif -%}
+          {%- if post.tags and post.tags.size > 0 -%}
+          <p class="post-list-tags">
+            {%- for tag in post.tags -%}
+            <span class="post-list-tag">{{ tag }}</span>
+            {%- endfor -%}
+          </p>
+          {%- endif -%}
+        </div>
+      </a>
+    </li>
+    {%- endfor -%}
+  </ol>
+  {%- else -%}
+  <p class="home-blurb">No posts yet — check back soon.</p>
+  {%- endif -%}
+</div>

@@ -1,0 +1,62 @@
+title: UTM Blog
+tagline: Notes from the team building UTM
+description: >-
+  Development updates, design notes, and behind-the-scenes from the team
+  building UTM — virtualize and emulate operating systems on macOS and iOS.
+url: "https://blog.getutm.app"
+baseurl: ""
+
+author:
+  name: UTM Team
+  url: https://getutm.app
+
+logo: /assets/images/logo.png
+social_image: /assets/images/apple-touch-icon.png
+
+permalink: /:year/:slug/
+timezone: Etc/UTC
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  toc_levels: 1..2
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    block:
+      line_numbers: false
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+feed:
+  path: feed.xml
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      author: UTM Team
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: page
+
+links:
+  mac: https://mac.getutm.app
+  ios: https://getutm.app
+  source: https://github.com/utmapp/UTM
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - node_modules
+  - .sass-cache
+  - .jekyll-cache
+  - .jekyll-metadata

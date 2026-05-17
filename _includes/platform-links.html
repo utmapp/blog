@@ -1,0 +1,25 @@
+{%- comment -%}
+  Shared-prefix CTA: "Get UTM for" is written once, with the two platforms
+  presented as connected pill segments under a single download surface.
+  Each pill carries an explicit aria-label so screen readers get the full
+  phrase even though the verb is only displayed once.
+{%- endcomment -%}
+<nav class="cta" aria-label="Download UTM">
+  <span class="cta-lede" aria-hidden="true">Get<span class="cta-lede-utm"> UTM </span>for</span>
+  <span class="cta-group">
+    <a class="cta-pill" href="{{ site.links.mac }}" aria-label="Get UTM for macOS">
+      <svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <rect x="3" y="5" width="18" height="11" rx="1.5"/>
+        <path d="M2 19h20"/>
+      </svg>
+      <span>macOS</span>
+    </a>
+    <a class="cta-pill" href="{{ site.links.ios }}" aria-label="Get UTM for iOS">
+      <svg class="cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/>
+        <path d="M11 18.5h2"/>
+      </svg>
+      <span>iOS</span>
+    </a>
+  </span>
+</nav>

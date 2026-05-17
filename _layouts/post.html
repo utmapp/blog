@@ -1,0 +1,48 @@
+---
+layout: default
+---
+<article class="post h-entry" itemscope itemtype="https://schema.org/BlogPosting">
+  <header class="post-header">
+    {%- if page.tags and page.tags.size > 0 -%}
+    <p class="post-eyebrow">
+      {%- for tag in page.tags -%}
+      <span class="post-tag">{{ tag }}</span>{%- unless forloop.last %} <span class="post-tag-sep" aria-hidden="true">·</span> {% endunless -%}
+      {%- endfor -%}
+    </p>
+    {%- endif -%}
+    <h1 class="post-title p-name" itemprop="name headline">{{ page.title }}</h1>
+    {%- if page.subtitle -%}
+    <p class="post-subtitle">{{ page.subtitle }}</p>
+    {%- endif -%}
+    <p class="post-meta">
+      <time class="dt-published" datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">
+        {{ page.date | date: "%B %-d, %Y" }}
+      </time>
+      {%- if page.human or page.ai -%}
+      <span class="post-meta-sep" aria-hidden="true">·</span>
+      <span class="post-byline">
+        {%- if page.human -%}
+        <span class="byline-name byline-human" itemprop="author">{{ page.human }}</span>
+        {%- endif -%}
+        {%- if page.ai -%}
+        <span class="byline-name byline-ai">{{ page.ai }}</span>
+        {%- endif -%}
+      </span>
+      {%- elsif page.author -%}
+      <span class="post-meta-sep" aria-hidden="true">·</span>
+      <span class="p-author h-card" itemprop="author">{{ page.author }}</span>
+      {%- endif -%}
+    </p>
+  </header>
+
+  <div class="post-body e-content" itemprop="articleBody">
+    {{ content }}
+  </div>
+
+  <footer class="post-footer">
+    <a class="post-back" href="{{ '/' | relative_url }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="14" height="14"><path d="M15 18l-6-6 6-6"/></svg>
+      All posts
+    </a>
+  </footer>
+</article>
