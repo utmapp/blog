@@ -764,8 +764,16 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
 .post-body .author-run .author-human::before,
 .post-body .author-run .author-ai::before { display: none; }
 
-/* Inner blocks: keep ::after tooltip working so hovering shows the
-   author at the hovered block's position. */
+/* Inner blocks: only the first child keeps its tooltip — that's where the
+   continuous gutter bar visually begins. Later blocks share the same bar
+   and would otherwise produce a redundant tooltip mid-run. */
+.post-body .author-run .author-human:not(:first-child)::after,
+.post-body .author-run .author-ai:not(:first-child)::after { display: none; }
+
+/* Only the first blue bar and first orange bar in the page introduce the
+   color — subsequent runs of the same author suppress their tooltip. */
+.post-body .author-run.author-human ~ .author-run.author-human .author-human::after,
+.post-body .author-run.author-ai ~ .author-run.author-ai .author-ai::after { display: none; }
 
 /* The wrapper itself shouldn't render a tooltip — its inner blocks do. */
 .post-body .author-run.author-human::after,
