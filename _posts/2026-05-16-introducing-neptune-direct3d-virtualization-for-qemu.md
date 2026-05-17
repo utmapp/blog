@@ -972,7 +972,7 @@ This is another area that really demands the operator to have domain knowledge i
 
 <p>The result is a far cleaner commit history than Claude would have produced unsupervised.</p>
 
-A note on that: I think that during development you should let Claude commit freely and often (including reverts). It's own lengthy commit messages and narratives in the comments form a long term memory that is very helpful for future sessions. I have found that often it tries to go down the same path and I would ask it to see if this has already been attempted. For example, it really likes to go down the route of trying to batch commands even though we attempted it and did not measure any performance benefit and only added latency. Just remember to squash all the commit and ask it to clean up the comments before merging it upstream.
+A note on that: I think that during development you should let Claude commit freely and often (including reverts). Its own lengthy commit messages and narratives in the comments form a long term memory that is very helpful for future sessions. I have found that often it tries to go down the same path and I would ask it to see if this has already been attempted. For example, it really likes to go down the route of trying to batch commands even though we attempted it and did not measure any performance benefit and only added latency. Just remember to squash all the commit and ask it to clean up the comments before merging it upstream.
 
 ### 5. Setting the autonomy dial explicitly
 
