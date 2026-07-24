@@ -53,6 +53,13 @@ module UTMBlog
     SETEXT_RULE_RE   = /\A\s*(=+|-+)\s*\z/.freeze
     HTML_HR_RE       = /\A\s*<hr\b/i.freeze
     MD_HR_RE         = /\A\s*(?:[-_*]\s*){3,}\s*\z/.freeze
+    # A raw HTML block element opening at column 0 (e.g. `<div class="…">`).
+    # Such a block is held atomic through to its matching close tag so that
+    # blank lines — and nested raw elements like <style> — inside it don't
+    # fracture it into separate blocks (which would strand the author IAL on
+    # a fragment instead of the whole element).
+    HTML_BLOCK_OPEN  = /\A<([a-zA-Z][a-zA-Z0-9]*)\b/.freeze
+    VOID_ELEMENTS    = %w[area base br col embed hr img input link meta param source track wbr].freeze
 
     module_function
 
@@ -94,6 +101,14 @@ module UTMBlog
             end
             i += 1
           end
+          # Absorb an immediately-following IAL line (e.g. `{:.author-ai}`)
+          # into the fenced block so it can be explicitly attributed. Without
+          # this the IAL would split off as its own block and the code fence
+          # would fall back to the default (human) heuristic.
+          if i < lines.length && lines[i].match?(TRAILING_IAL)
+            fenced << lines[i]
+            i += 1
+          end
           blocks << fenced.join("\n")
         elsif (m = line.match(RAW_BLOCK_OPEN))
           flush.call
@@ -115,6 +130,10 @@ module UTMBlog
             end
             blocks << raw.join("\n")
           end
+        elsif (m = line.match(HTML_BLOCK_OPEN))
+          flush.call
+          block, i = consume_html_block(lines, i, m[1].downcase)
+          blocks << block
         elsif line.strip.empty?
           flush.call
           i += 1
@@ -126,6 +145,54 @@ module UTMBlog
 
       flush.call
       blocks
+    end
+
+    # Consumes a raw HTML block element that opens at `lines[i]` through to
+    # its matching close tag, tracking nesting of the same tag name so the
+    # whole element stays in one block. Blank lines *between* the element's
+    # tags are dropped: kramdown ends a raw HTML block at the first blank
+    # line and then mis-nests unknown inline elements (e.g. the <svg>/<defs>/
+    # <rect> of an inline diagram), emitting a stray close tag. Collapsing
+    # them lets a diagram keep blank lines in the source for readability
+    # while kramdown still sees one contiguous block. Blank lines inside a
+    # nested raw element (pre/script/style/textarea), where whitespace is
+    # significant, are preserved. Returns [block_string, next_index].
+    def consume_html_block(lines, i, tag)
+      first = lines[i]
+      depth = tag_delta(first, tag)
+      i += 1
+      # Void, self-closed, or opened-and-closed on the same line: one line.
+      return [first, i] if VOID_ELEMENTS.include?(tag) || depth <= 0
+
+      html    = [first]
+      raw_tag = nil # set while inside a nested pre/script/style/textarea
+      while i < lines.length && depth > 0
+        line = lines[i]
+        if raw_tag
+          html << line
+          raw_tag = nil if line =~ RAW_BLOCK_CLOSE.call(raw_tag)
+        elsif (rm = line.match(RAW_BLOCK_OPEN))
+          html << line
+          nested  = rm[1].downcase
+          raw_tag = nested unless line =~ RAW_BLOCK_CLOSE.call(nested)
+        elsif !line.strip.empty?
+          html << line
+        end
+        depth += tag_delta(line, tag)
+        i += 1
+      end
+      [html.join("\n"), i]
+    end
+
+    # Net nesting change contributed by `line` for element `tag`:
+    # opening tags (minus self-closed ones) minus closing tags. Entity-
+    # escaped angle brackets (e.g. &lt;div&gt; in code) never match.
+    def tag_delta(line, tag)
+      re     = Regexp.escape(tag)
+      opens  = line.scan(/<#{re}\b/i).size
+      selfc  = line.scan(/<#{re}\b[^>]*\/>/i).size
+      closes = line.scan(/<\/#{re}\s*>/i).size
+      (opens - selfc) - closes
     end
 
     def tag_block(block, human:, ai:)
