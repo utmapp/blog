@@ -509,6 +509,9 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   padding: 0.1em 0.35em;
   color: var(--code-text);
   font-feature-settings: "calt" 0;
+  /* Long flag/path strings have no spaces to break at — let them wrap
+     rather than overflow the column. */
+  overflow-wrap: break-word;
 }
 
 .post-body pre,
@@ -579,6 +582,10 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   border-bottom: 1px solid var(--border);
 }
 .post-body th, .page-body th { font-family: var(--font-sans); font-weight: 600; }
+/* In auto-layout tables `break-word` doesn't shrink a cell's min-content
+   width, so a long code span still blows out the column — use `anywhere`. */
+.post-body td code,
+.page-body td code { overflow-wrap: anywhere; }
 
 /* --- Figures (image with caption) -------------------------- */
 .post-body figure.figure,
