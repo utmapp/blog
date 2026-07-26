@@ -504,15 +504,14 @@ The framework itself is not bundled: get it from Apple's Game Porting Toolkit an
 
 ### virglrenderer
 
-This is the interesting one, because a single QEMU process has to drive a native arm64 library and two render servers of *different architectures*. It is three Meson configurations of the same source tree:
+This is the interesting one, because a single QEMU process has to drive a native arm64 library and a render server that runs as *either architecture*. It is two Meson configurations of the same source tree:
 {:.author-ai}
 
-1. **arm64 library** (`neptune-mode=client`) — the `libvirglrenderer` that QEMU links. It advertises the Neptune capset and proxies D3D traffic to the render server without linking any D3D backend, which is what lets the library stay native arm64 while a backend runs elsewhere. This is the only configuration that gets installed.
-2. **arm64 render server** (`neptune-mode=server`) — hosts Venus and the Neptune DXMT backend.
-3. **x86_64 render server** (`neptune-mode=server`, cross-compiled) — hosts the Neptune D3DMetal backend.
+1. **Native arm64** — produces both the `libvirglrenderer` that QEMU links and a render server hosting Venus and the Neptune DXMT backend. This is the only configuration that gets installed.
+2. **x86_64 cross build** — the same render server for the Neptune D3DMetal backend, which has to be x86_64 because the framework is. It links virglrenderer statically and is never installed.
 {:.author-ai}
 
-The two servers are then fused with `lipo` into one universal binary. At runtime the parent process picks a worker's slice per context, so there is only one render server path to configure.
+The two servers are then fused with `lipo` into one universal binary. At runtime the parent process picks a worker's slice per context — Venus contexts get the arm64 slice, Neptune contexts get x86_64/D3DMetal under Rosetta by default or arm64/DXMT with `NPT_BACKEND=dxmt` — so there is only one render server path to configure, and it is the one baked in at build time.
 {:.author-ai}
 
 ```bash
@@ -520,7 +519,7 @@ git clone -b neptune https://github.com/utmapp/virglrenderer.git "$SRC/virglrend
 ```
 {:.author-ai}
 
-**1. Native arm64 library (client mode).**
+**1. Native arm64 (library + render server).**
 {:.author-ai}
 
 ```bash
@@ -528,65 +527,55 @@ meson setup "$SRC/virglrenderer/build-arm64" "$SRC/virglrenderer" \
   "-Dc_args=-I$ANGLE_INC" \
   -Dvenus=true \
   -Dneptune=true \
-  -Dneptune-mode=client \
   -Drender-server-worker=process \
   -Dcheck-gl-errors=false \
   "--pkg-config-path=$PREFIX/lib/pkgconfig" \
   "--prefix=$PREFIX"
 meson install -C "$SRC/virglrenderer/build-arm64"
+cp "$PREFIX/libexec/virgl_render_server" "$SRC/virglrenderer/virgl_render_server.arm64"
 ```
 {:.author-ai}
 
-**2. Native arm64 render server (Venus + Neptune/DXMT).** Same options with `neptune-mode=server`. Only compile it — installing would overwrite the client library from step 1.
+Stash the *installed* server, not the one in the build tree: only the installed copy carries the `install_name`'d path to `$PREFIX/lib/libvirglrenderer.1.dylib`, and `lipo` is about to write over it.
 {:.author-ai}
 
-```bash
-meson setup "$SRC/virglrenderer/build-arm64-server" "$SRC/virglrenderer" \
-  "-Dc_args=-I$ANGLE_INC" \
-  -Dvenus=true \
-  -Dneptune=true \
-  -Dneptune-mode=server \
-  -Drender-server-worker=process \
-  -Dcheck-gl-errors=false \
-  "--pkg-config-path=$PREFIX/lib/pkgconfig" \
-  "--prefix=$PREFIX"
-meson compile -C "$SRC/virglrenderer/build-arm64-server"
-```
-{:.author-ai}
-
-**3. Rosetta x86_64 render server (Neptune/D3DMetal).** This one cross-compiles with the cross file from the d3dmetal-native repository. Since ANGLE was built arm64, the x86_64 configuration must not try to use EGL, so give it its own pkg-config directory with EGL turned off:
+**2. Rosetta x86_64 render server.** This one cross-compiles with the cross file from the d3dmetal-native repository. `-Ddefault_library=static` links virglrenderer into the server so the fused binary needs no x86_64 dylib, and `-Dvtest=false` drops the only target that pulls in GL — libepoxy in the prefix is arm64 only. For the same reason the x86_64 configuration must not try to use EGL, so give it its own pkg-config directory with EGL turned off:
 {:.author-ai}
 
 ```bash
 cp -R "$PREFIX/lib/pkgconfig" "$PREFIX/lib/pkgconfig-x86_64"
 sed -i '' 's/epoxy_has_egl=1/epoxy_has_egl=0/' "$PREFIX/lib/pkgconfig-x86_64/epoxy.pc"
-meson setup "$SRC/virglrenderer/build-x86_64-server" "$SRC/virglrenderer" \
+meson setup "$SRC/virglrenderer/build-x86_64" "$SRC/virglrenderer" \
   --cross-file "$SRC/d3dmetal-native/build-macos-x86_64.txt" \
   "-Dc_args=-I$ANGLE_INC" \
   -Dvenus=false \
   -Dneptune=true \
-  -Dneptune-mode=server \
+  -Dvtest=false \
   -Drender-server-worker=process \
   -Dcheck-gl-errors=false \
+  -Ddefault_library=static \
   "--pkg-config-path=$PREFIX/lib/pkgconfig-x86_64" \
   "--prefix=$PREFIX"
-meson compile -C "$SRC/virglrenderer/build-x86_64-server"
+meson compile -C "$SRC/virglrenderer/build-x86_64"
 ```
 {:.author-ai}
 
-**4. Fuse the two slices.**
+Compile only — installing this configuration would overwrite the native library from step 1.
+{:.author-ai}
+
+**3. Fuse the two slices.**
 {:.author-ai}
 
 ```bash
 lipo -create \
-  "$SRC/virglrenderer/build-arm64-server/server/virgl_render_server" \
-  "$SRC/virglrenderer/build-x86_64-server/server/virgl_render_server" \
+  "$SRC/virglrenderer/virgl_render_server.arm64" \
+  "$SRC/virglrenderer/build-x86_64/server/virgl_render_server" \
   -output "$PREFIX/libexec/virgl_render_server"
 lipo -archs "$PREFIX/libexec/virgl_render_server"   # must print: x86_64 arm64
 ```
 {:.author-ai}
 
-Neither backend is linked: the render server `dlopen`s `libdxmt-native.dylib` on the arm64 slice and `libd3dmetal-native.dylib` on the x86_64 slice, by name, so both must be reachable through the dynamic loader path at run time (see [Running](#running)).
+Neither backend is linked: the render server `dlopen`s `libdxmt-native.dylib` on the arm64 slice and `libd3dmetal-native.dylib` on the x86_64 slice, by name, so both must be reachable through the dynamic loader path at run time (see [Running](#running)). Neither is a build dependency either — a missing one costs you that backend at run time and nothing more.
 {:.author-ai}
 
 ### QEMU
