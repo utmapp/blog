@@ -402,8 +402,8 @@ All the work described here is open source so if you like tinkering, you can try
 
 ## Code
 
-* [QEMU](https://github.com/utmapp/qemu/tree/utm-edition-neptune)
-* [virglrenderer](https://github.com/utmapp/virglrenderer/tree/neptune)
+* [QEMU](https://github.com/utmapp/qemu/tree/utm-edition)
+* [virglrenderer](https://github.com/utmapp/virglrenderer/tree/macos-next)
 * [DXMT](https://github.com/utmapp/dxmt)
 * [d3dmetal-native](https://github.com/utmapp/d3dmetal-native)
 * [Windows UMD](https://github.com/osy/virtio-win-mesa/tree/neptune)
@@ -515,7 +515,7 @@ The two servers are then fused with `lipo` into one universal binary. At runtime
 {:.author-ai}
 
 ```bash
-git clone -b neptune https://github.com/utmapp/virglrenderer.git "$SRC/virglrenderer"
+git clone -b macos-next https://github.com/utmapp/virglrenderer.git "$SRC/virglrenderer"
 ```
 {:.author-ai}
 
@@ -584,7 +584,7 @@ Nothing Neptune-specific has to be enabled at configure time — virglrenderer i
 {:.author-ai}
 
 ```bash
-git clone -b utm-edition-neptune https://github.com/utmapp/qemu.git "$SRC/qemu"
+git clone -b utm-edition https://github.com/utmapp/qemu.git "$SRC/qemu"
 mkdir -p "$SRC/qemu/build" && cd "$SRC/qemu/build"
 PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ../configure \
   "--extra-cflags=-I$ANGLE_INC" \
