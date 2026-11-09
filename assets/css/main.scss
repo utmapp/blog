@@ -587,6 +587,33 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
 .post-body td code,
 .page-body td code { overflow-wrap: anywhere; }
 
+/* Top-level tables are wrapped by _plugins/table_scroll.rb. A table wider
+   than the column scrolls inside .table-scroll rather than widening the
+   page (iOS otherwise lets the whole post pan sideways). The outer
+   .table-wrap carries the author class so the gutter bar isn't clipped. */
+.post-body .table-wrap,
+.page-body .table-wrap { margin: 1.6em 0; }
+.post-body .table-scroll,
+.page-body .table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.post-body .table-scroll > table,
+.page-body .table-scroll > table { margin: 0; }
+
+@media (max-width: 640px) {
+  .post-body table,
+  .page-body table { font-size: 0.85em; }
+  .post-body th,
+  .post-body td,
+  .page-body th,
+  .page-body td { padding: 0.45rem 0.5rem; }
+  /* Equal-width digits so number columns line up at the smaller size. */
+  .post-body td,
+  .page-body td { font-variant-numeric: tabular-nums; }
+}
+
 /* --- Figures (image with caption) -------------------------- */
 .post-body figure.figure,
 .page-body figure.figure {
