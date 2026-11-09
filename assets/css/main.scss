@@ -27,6 +27,7 @@
   --accent-hover: #1839ad;
   --accent-on: #ffffff;
   --accent-tint: #eef2ff;
+  --selection: #d4defe;
 
   /* Code */
   --code-bg: #f4f6fb;
@@ -83,6 +84,7 @@
     --accent-hover: #a4bfff;
     --accent-on: #0b0f1e;
     --accent-tint: #182343;
+    --selection: #2f4a9a;
 
     --code-bg: #131829;
     --code-border: #1f2536;
@@ -135,7 +137,7 @@ a {
 }
 a:hover { color: var(--accent-hover); text-decoration: underline; }
 
-::selection { background: var(--accent-tint); color: var(--text); }
+::selection { background: var(--selection); color: var(--text); }
 
 :focus-visible {
   outline: 2px solid var(--focus-ring);
